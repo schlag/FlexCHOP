@@ -542,7 +542,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.page = "Control";
 		np.defaultValues[0] = 0.0;
 
-		OP_ParAppendResult res = manager->appendInt(np);
+		OP_ParAppendResult res = manager->appendToggle(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
@@ -1132,10 +1132,10 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 	{
 		OP_NumericParameter np;
 
-		np.name = "Maxparticles";
+		np.name = "Maxparticles";=
 		np.label = "Max Number of Particles";
 		np.page = "Solver";
-		np.defaultValues[0] = 160000;
+		np.defaultValues[0] = 10000;
 
 		OP_ParAppendResult res = manager->appendInt(np);
 		assert(res == OP_ParAppendResult::Success);
