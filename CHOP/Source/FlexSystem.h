@@ -167,6 +167,9 @@ class FlexSystem {
 	NvFlexSolver* g_flex;
 	NvFlexLibrary* g_flexLib;
 
+	NvFlexExtForceField g_forcefield;
+	NvFlexExtForceFieldCallback *g_forcefieldCallback;
+
 	NvFlexParams g_params;
 	NvFlexParams g_defaultParams;
 

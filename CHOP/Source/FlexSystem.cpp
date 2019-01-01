@@ -297,7 +297,6 @@ void FlexSystem::initSystem() {
 	desc.computeType = eNvFlexCUDA;
 
 	g_flexLib = NvFlexInit(NV_FLEX_VERSION, ErrorCallback, &desc);
-
 }
 
 
@@ -363,6 +362,13 @@ void FlexSystem::initParams() {
 
 	g_params.numPlanes = 0;
 
+	g_forcefield.mPosition[0] = 0.0f;
+	g_forcefield.mPosition[1] = 0.0f;
+	g_forcefield.mPosition[2] = 0.0f;
+	g_forcefield.mRadius = 1.0f;
+	g_forcefield.mStrength = -30.0f;
+	g_forcefield.mLinearFalloff = true;
+	g_forcefield.mMode = eNvFlexExtModeForce;
 }
 
 void FlexSystem::initScene(){
@@ -512,7 +518,9 @@ void FlexSystem::postInitScene(){
 
 
 	g_flex = NvFlexCreateSolver(g_flexLib, maxParticles, g_maxDiffuseParticles, g_maxNeighborsPerParticle);
-
+	if (g_forcefieldCallback)
+		NvFlexExtDestroyForceFieldCallback(g_forcefieldCallback);
+	g_forcefieldCallback = NvFlexExtCreateForceFieldCallback(g_flex);
 }
 
 
@@ -788,6 +796,7 @@ void FlexSystem::update(){
 		setShapes();
 
 		NvFlexSetParams(g_flex, &g_params);
+		NvFlexExtSetForceFields(g_forcefieldCallback, &g_forcefield, 1);
 
 		NvFlexUpdateSolver(g_flex, g_dt, g_numSubsteps, g_profile);
 

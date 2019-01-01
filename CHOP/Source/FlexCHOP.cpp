@@ -166,6 +166,17 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	//Rigid
 	FlexSys->g_params.plasticThreshold = inputs->getParDouble("PlasticThreshold");
 	FlexSys->g_params.plasticCreep = inputs->getParDouble("PlasticCreep");
+
+	//ForceField
+	double mPosition[3];
+	inputs->getParDouble3("ForcefieldPos", mPosition[0], mPosition[1], mPosition[2]);
+	FlexSys->g_forcefield.mPosition[0] = mPosition[0];
+	FlexSys->g_forcefield.mPosition[1] = mPosition[1];
+	FlexSys->g_forcefield.mPosition[2] = mPosition[2];
+	FlexSys->g_forcefield.mRadius = inputs->getParDouble("ForcefieldRadius");
+	FlexSys->g_forcefield.mStrength = inputs->getParDouble("ForcefieldStrength");
+	FlexSys->g_forcefield.mLinearFalloff = inputs->getParInt("ForcefieldLinearFalloff");
+	FlexSys->g_forcefield.mMode = eNvFlexExtModeForce; // OR eNvFlexExtModeImpulse OR eNvFlexExtModeVelocityChange
 }
 
 const char*
@@ -1127,6 +1138,62 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.defaultValues[0] = 160000;
 
 		OP_ParAppendResult res = manager->appendInt(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	////ForceField
+	
+	// ForcefieldPos
+	{
+		OP_NumericParameter np;
+
+		np.name = "ForcefieldPos";
+		np.label = "Forcefield Position";
+		np.page = "Force";
+		np.defaultValues[0] = 0.0f;
+		np.defaultValues[1] = 0.0f;
+		np.defaultValues[2] = 0.0f;
+
+		OP_ParAppendResult res = manager->appendXYZ(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// ForcefieldRadius
+	{
+		OP_NumericParameter np;
+
+		np.name = "ForcefieldRadius";
+		np.label = "Forcefield Radius";
+		np.page = "Force";
+		np.defaultValues[0] = 1.0;
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// ForcefieldStrength
+	{
+		OP_NumericParameter np;
+
+		np.name = "ForcefieldStrength";
+		np.label = "Forcefield Strength";
+		np.page = "Force";
+		np.defaultValues[0] = -30.0;
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// ForcefieldLinearFalloff
+	{
+		OP_NumericParameter np;
+
+		np.name = "ForcefieldLinearFalloff";
+		np.label = "Forcefield Linear Falloff";
+		np.page = "Force";
+		np.defaultValues[0] = 1.0;
+
+		OP_ParAppendResult res = manager->appendToggle(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 }
