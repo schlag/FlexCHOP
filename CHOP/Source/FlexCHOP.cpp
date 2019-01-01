@@ -229,6 +229,9 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 		FlexSys->initScene();
 
+		if (FlexSys->g_forcefieldCallback)
+			NvFlexExtDestroyForceFieldCallback(FlexSys->g_forcefieldCallback);
+		FlexSys->g_forcefieldCallback = NvFlexExtCreateForceFieldCallback(FlexSys->g_flex);
 
 		FlexSys->g_params.radius = inputs->getParDouble("Radius");
 
