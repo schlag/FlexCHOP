@@ -102,32 +102,70 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 
 	FlexSys->g_profile = inputs->getParInt("Profile");
 
-	FlexSys->g_params.maxSpeed = inputs->getParDouble("Maxspeed");
+	////Solver
 	FlexSys->g_numSubsteps = inputs->getParInt("Numsubsteps");
 	FlexSys->g_params.numIterations = inputs->getParInt("Numiterations");
 	FlexSys->g_dt = 1.0 / inputs->getParDouble("Fps");
 	maxVel = 0.5f*FlexSys->g_params.radius*FlexSys->g_numSubsteps / FlexSys->g_dt;
 
 
+	////Common
 	double gravity[3];
 	inputs->getParDouble3("Gravity", gravity[0], gravity[1], gravity[2]);
-
 	FlexSys->g_params.gravity[0] = gravity[0];
 	FlexSys->g_params.gravity[1] = gravity[1];
 	FlexSys->g_params.gravity[2] = gravity[2];
 
 	FlexSys->g_params.dynamicFriction = inputs->getParDouble("Dynamicfriction");
+	FlexSys->g_params.staticFriction = inputs->getParDouble("Staticfriction");
+	FlexSys->g_params.particleFriction = inputs->getParDouble("Particlefriction");
 	FlexSys->g_params.restitution = inputs->getParDouble("Restitution");
 	FlexSys->g_params.adhesion = inputs->getParDouble("Adhesion");
+	FlexSys->g_params.sleepThreshold = inputs->getParDouble("SleepThreshold");
+	FlexSys->g_params.maxSpeed = inputs->getParDouble("Maxspeed");
+	FlexSys->g_params.maxAcceleration = inputs->getParDouble("MaxAcceleration");
+	FlexSys->g_params.shockPropagation = inputs->getParDouble("ShockPropagation");
 	FlexSys->g_params.dissipation = inputs->getParDouble("Dissipation");
+	FlexSys->g_params.damping = inputs->getParDouble("Damping");
 
+
+	////Fluid
+	FlexSys->g_params.fluid = inputs->getParInt("Fluid");
 	FlexSys->g_params.cohesion = inputs->getParDouble("Cohesion");
 	FlexSys->g_params.surfaceTension = inputs->getParDouble("Surfacetension");
 	FlexSys->g_params.viscosity = inputs->getParDouble("Viscosity");
 	FlexSys->g_params.vorticityConfinement = inputs->getParDouble("Vorticityconfinement");
+	FlexSys->g_params.smoothing = inputs->getParDouble("Smoothing");
+	FlexSys->g_params.solidPressure = inputs->getParDouble("SolidPressure");
+	FlexSys->g_params.freeSurfaceDrag = inputs->getParDouble("FreeSurfaceDrag");
+	FlexSys->g_params.buoyancy = inputs->getParDouble("Buoyancy");
 
-	FlexSys->g_params.damping = inputs->getParDouble("Damping");
 
+	////Cloth
+	double wind[3];
+	inputs->getParDouble3("Wind", wind[0], wind[1], wind[2]);
+	FlexSys->g_params.wind[0] = wind[0];
+	FlexSys->g_params.wind[1] = wind[1];
+	FlexSys->g_params.wind[2] = wind[2];
+	FlexSys->g_params.drag = inputs->getParDouble("Drag");
+	FlexSys->g_params.lift = inputs->getParDouble("Lift");
+
+
+	//Diffuse
+	double diffuseSortAxis[3];
+	inputs->getParDouble3("DiffuseSortAxis", diffuseSortAxis[0], diffuseSortAxis[1], diffuseSortAxis[2]);
+	FlexSys->g_params.diffuseSortAxis[0] = diffuseSortAxis[0];
+	FlexSys->g_params.diffuseSortAxis[1] = diffuseSortAxis[1];
+	FlexSys->g_params.diffuseSortAxis[2] = diffuseSortAxis[2];
+	FlexSys->g_params.diffuseThreshold = inputs->getParDouble("DiffuseThreshold");
+	FlexSys->g_params.diffuseBuoyancy = inputs->getParDouble("DiffuseBuoyancy");
+	FlexSys->g_params.diffuseDrag = inputs->getParDouble("DiffuseDrag");
+	FlexSys->g_params.diffuseBallistic = inputs->getParInt("DiffuseBallistic");
+	FlexSys->g_params.diffuseLifetime = inputs->getParDouble("DiffuseLifetime");
+
+	//Rigid
+	FlexSys->g_params.plasticThreshold = inputs->getParDouble("PlasticThreshold");
+	FlexSys->g_params.plasticCreep = inputs->getParDouble("PlasticCreep");
 }
 
 const char*
@@ -483,12 +521,14 @@ FlexCHOP::getInfoDATEntries(int index,
 void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 {
 
-	// reset
+	////Control
+	//Reset
 	{
 		OP_NumericParameter	np;
 
 		np.name = "Reset";
 		np.label = "Reset";
+		np.page = "Control";
 		np.defaultValues[0] = 0.0;
 
 		OP_ParAppendResult res = manager->appendInt(np);
@@ -501,24 +541,12 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 		np.name = "Simulate";
 		np.label = "Simulate";
+		np.page = "Control";
 		np.defaultValues[0] = 1.0;
 
 		OP_ParAppendResult res = manager->appendToggle(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
-
-	//Radius
-	{
-		OP_NumericParameter	np;
-
-		np.name = "Radius";
-		np.label = "Radius";
-		np.defaultValues[0] = 0.05;
-
-		OP_ParAppendResult res = manager->appendFloat(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
-
 
 	// Profile
 	{
@@ -526,124 +554,80 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 		np.name = "Profile";
 		np.label = "Profile";
+		np.page = "Control";
 		np.defaultValues[0] = 0;
 
 		OP_ParAppendResult res = manager->appendToggle(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-
-	// Maxspeed
+	//Radius
 	{
-		OP_NumericParameter	np;
+		OP_NumericParameter np;
 
-		np.name = "Maxspeed";
-		np.label = "Max Speed";
-		np.defaultValues[0] = 100;
+		np.name = "Radius";
+		np.label = "Radius";
+		np.page = "Control";
+		np.defaultValues[0] = 0.05;
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
+	////Common
 
 	//Gravity
 	{
-		OP_NumericParameter	np;
+		OP_NumericParameter np;
 
 		np.name = "Gravity";
 		np.label = "Gravity";
+		np.page = "Common";
 
 		np.defaultValues[0] = 0.0;
 		np.defaultValues[1] = -3.0;
 		np.defaultValues[2] = 0.0;
 
-
 		OP_ParAppendResult res = manager->appendXYZ(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
-
-	
-
-	///////////SOLVER
-
-	// Fps
-	{
-		OP_NumericParameter	np;
-
-		np.name = "Fps";
-		np.label = "FPS";
-		np.page = "Solver";
-		np.defaultValues[0] = 30;
-
-		OP_ParAppendResult res = manager->appendFloat(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
-
-	// Numsubsteps
-	{
-		OP_NumericParameter	np;
-
-		np.name = "Numsubsteps";
-		np.label = "Num Substeps";
-		np.page = "Solver";
-		np.defaultValues[0] = 3;
-
-		OP_ParAppendResult res = manager->appendInt(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
-
-	//Numiterations
-	{
-		OP_NumericParameter	np;
-
-		np.name = "Numiterations";
-		np.label = "Num Iterations";
-		np.page = "Solver";
-		np.defaultValues[0] = 3;
-
-		OP_ParAppendResult res = manager->appendInt(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
-
-	// Maxparticles
-	{
-		OP_NumericParameter	np;
-
-		np.name = "Maxparticles";
-		np.label = "Max Number of Particles";
-		np.page = "Solver";
-		np.defaultValues[0] = 160000;
-
-		OP_ParAppendResult res = manager->appendInt(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
-
-	
-
-	////////PARAMS
-
-
-	//Damping
-	{
-		OP_NumericParameter	np;
-
-		np.name = "Damping";
-		np.label = "Damping";
-		np.defaultValues[0] = 0;
-		np.page = "PartsParams";
-
-		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
 	//Dynamicfriction
 	{
-		OP_NumericParameter	np;
+		OP_NumericParameter np;
 
 		np.name = "Dynamicfriction";
 		np.label = "Dynamic Friction";
 		np.defaultValues[0] = 0;
-		np.page = "PartsParams";
+		np.page = "Common";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Staticfriction
+	{
+		OP_NumericParameter np;
+
+		np.name = "Staticfriction";
+		np.label = "Static Friction";
+		np.page = "Common";
+
+		np.defaultValues[0] = 0.0;
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Particlefriction
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particlefriction";
+		np.label = "Particle Friction";
+		np.page = "Common";
+
+		np.defaultValues[0] = 0.0;
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
@@ -651,12 +635,12 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 	//Restitution
 	{
-		OP_NumericParameter	np;
+		OP_NumericParameter np;
 
 		np.name = "Restitution";
 		np.label = "Restitution";
 		np.defaultValues[0] = 0.001f;
-		np.page = "PartsParams";
+		np.page = "Common";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
@@ -664,12 +648,64 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 	//Adhesion
 	{
-		OP_NumericParameter	np;
+		OP_NumericParameter np;
 
 		np.name = "Adhesion";
 		np.label = "Adhesion";
 		np.defaultValues[0] = 0.0f;
-		np.page = "PartsParams";
+		np.page = "Common";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//SleepThreshold
+	{
+		OP_NumericParameter np;
+
+		np.name = "SleepThreshold";
+		np.label = "Sleep Threshold";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Common";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Maxspeed
+	{
+		OP_NumericParameter	np;
+
+		np.name = "Maxspeed";
+		np.label = "Max Speed";
+		np.page = "Common";
+		np.defaultValues[0] = 100;
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//MaxAcceleration
+	{
+		OP_NumericParameter np;
+
+		np.name = "MaxAcceleration";
+		np.label = "Max Acceleration";
+		np.page = "Common";
+		np.defaultValues[0] = 100.0f;
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//ShockPropagation
+	{
+		OP_NumericParameter np;
+
+		np.name = "ShockPropagation";
+		np.label = "Shock Propagation";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Common";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
@@ -677,14 +713,42 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 	//Dissipation
 	{
-		OP_NumericParameter	np;
+		OP_NumericParameter np;
 
 		np.name = "Dissipation";
 		np.label = "Dissipation";
 		np.defaultValues[0] = 0.0f;
-		np.page = "PartsParams";
+		np.page = "Common";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Damping
+	{
+		OP_NumericParameter np;
+
+		np.name = "Damping";
+		np.label = "Damping";
+		np.defaultValues[0] = 0;
+		np.page = "Common";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//// Fluid
+
+	//Fluid
+	{
+		OP_NumericParameter np;
+
+		np.name = "Fluid";
+		np.label = "Fluid";
+		np.defaultValues[0] = 1.0f;
+		np.page = "Fluid";
+
+		OP_ParAppendResult res = manager->appendToggle(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
@@ -695,7 +759,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.name = "Cohesion";
 		np.label = "Cohesion";
 		np.defaultValues[0] = 0.1f;
-		np.page = "PartsParams";
+		np.page = "Fluid";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
@@ -708,7 +772,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.name = "Surfacetension";
 		np.label = "Surface Tension";
 		np.defaultValues[0] = 0.0f;
-		np.page = "PartsParams";
+		np.page = "Fluid";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
@@ -721,7 +785,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.name = "Viscosity";
 		np.label = "Viscosity";
 		np.defaultValues[0] = 0.0f;
-		np.page = "PartsParams";
+		np.page = "Fluid";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
@@ -734,13 +798,220 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.name = "Vorticityconfinement";
 		np.label = "Vorticity Confinement";
 		np.defaultValues[0] = 80.0f;
-		np.page = "PartsParams";
+		np.page = "Fluid";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//////////////////Emission
+	//Smoothing
+	{
+		OP_NumericParameter np;
+
+		np.name = "Smoothing";
+		np.label = "Smoothing";
+		np.defaultValues[0] = 1.0f;
+		np.page = "Fluid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//SolidPressure
+	{
+		OP_NumericParameter np;
+
+		np.name = "SolidPressure";
+		np.label = "Solid Pressure";
+		np.defaultValues[0] = 1.0f;
+		np.page = "Fluid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//FreeSurfaceDrag
+	{
+		OP_NumericParameter np;
+
+		np.name = "FreeSurfaceDrag";
+		np.label = "Free Surface Drag";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Fluid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Buoyancy
+	{
+		OP_NumericParameter np;
+
+		np.name = "Buoyancy";
+		np.label = "Buoyancy";
+		np.defaultValues[0] = 1.0f;
+		np.page = "Fluid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	////Cloth
+
+	//Wind
+	{
+		OP_NumericParameter np;
+
+		np.name = "Wind";
+		np.label = "Wind";
+		np.page = "Cloth";
+
+		np.defaultValues[0] = 0.0;
+		np.defaultValues[1] = 0.0;
+		np.defaultValues[2] = 0.0;
+
+		OP_ParAppendResult res = manager->appendXYZ(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Drag
+	{
+		OP_NumericParameter np;
+
+		np.name = "Drag";
+		np.label = "Drag";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Cloth";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Lift
+	{
+		OP_NumericParameter np;
+
+		np.name = "Lift";
+		np.label = "Lift";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Cloth";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	////Diffuse
+
+	//DiffuseThreshold
+	{
+		OP_NumericParameter np;
+
+		np.name = "DiffuseThreshold";
+		np.label = "Diffuse Threshold";
+		np.defaultValues[0] = 100.0f;
+		np.page = "Diffuse";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//DiffuseBuoyancy
+	{
+		OP_NumericParameter np;
+
+		np.name = "DiffuseBuoyancy";
+		np.label = "Diffuse Buoyancy";
+		np.defaultValues[0] = 1.0f;
+		np.page = "Diffuse";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//DiffuseDrag
+	{
+		OP_NumericParameter np;
+
+		np.name = "DiffuseDrag";
+		np.label = "Diffuse Drag";
+		np.defaultValues[0] = 0.8f;
+		np.page = "Diffuse";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//DiffuseBallistic
+	{
+		OP_NumericParameter np;
+
+		np.name = "DiffuseBallistic";
+		np.label = "Diffuse Ballistic";
+		np.defaultValues[0] = 16;
+		np.page = "Diffuse";
+
+		OP_ParAppendResult res = manager->appendInt(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//DiffuseSortAxis
+	{
+		OP_NumericParameter np;
+
+		np.name = "DiffuseSortAxis";
+		np.label = "Diffuse Sort Axis";
+		np.page = "Diffuse";
+
+		np.defaultValues[0] = 0.0;
+		np.defaultValues[1] = 0.0;
+		np.defaultValues[2] = 0.0;
+
+		OP_ParAppendResult res = manager->appendXYZ(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//DiffuseLifetime
+	{
+		OP_NumericParameter np;
+
+		np.name = "DiffuseLifetime";
+		np.label = "Diffuse Lifetime";
+		np.defaultValues[0] = 2.0f;
+		np.page = "Diffuse";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	////Rigid
+
+	//PlasticThreshold
+	{
+		OP_NumericParameter np;
+
+		np.name = "PlasticThreshold";
+		np.label = "Plastic Threshold";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Rigid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//PlasticCreep
+	{
+		OP_NumericParameter np;
+
+		np.name = "PlasticCreep";
+		np.label = "Plastic Creep";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Rigid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//// Emission
 
 	//Boxesemitterschop
 	{
@@ -767,9 +1038,9 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	////////////////////Collisions
+	////Collisions
 
-	//Colplaneschop
+	// Colplaneschop
 	{
 		OP_StringParameter sp;
 
@@ -781,7 +1052,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//Colspheres
+	// Colspheres
 	{
 		OP_StringParameter sp;
 
@@ -793,7 +1064,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//Colboxes
+	// Colboxes
 	{
 		OP_StringParameter sp;
 
@@ -805,4 +1076,57 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
+	//// Solver
+
+	// Fps
+	{
+		OP_NumericParameter np;
+
+		np.name = "Fps";
+		np.label = "FPS";
+		np.page = "Solver";
+		np.defaultValues[0] = 30;
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Numsubsteps
+	{
+		OP_NumericParameter np;
+
+		np.name = "Numsubsteps";
+		np.label = "Num Substeps";
+		np.page = "Solver";
+		np.defaultValues[0] = 3;
+
+		OP_ParAppendResult res = manager->appendInt(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Numiterations
+	{
+		OP_NumericParameter np;
+
+		np.name = "Numiterations";
+		np.label = "Num Iterations";
+		np.page = "Solver";
+		np.defaultValues[0] = 3;
+
+		OP_ParAppendResult res = manager->appendInt(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Maxparticles
+	{
+		OP_NumericParameter np;
+
+		np.name = "Maxparticles";
+		np.label = "Max Number of Particles";
+		np.page = "Solver";
+		np.defaultValues[0] = 160000;
+
+		OP_ParAppendResult res = manager->appendInt(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
 }

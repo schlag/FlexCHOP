@@ -344,8 +344,6 @@ void FlexSystem::initParams() {
 	g_params.maxSpeed = FLT_MAX;
 	g_params.maxAcceleration = 100.0f;	// approximately 10x gravity
 
-	g_params.smoothing = 1.0f;
-
 	g_params.relaxationMode = eNvFlexRelaxationLocal;
 	g_params.relaxationFactor = 1.0f;
 	g_params.solidPressure = 1.0f;
