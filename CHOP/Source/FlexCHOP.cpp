@@ -229,6 +229,7 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 		FlexSys->initScene();
 
+
 		FlexSys->g_params.radius = inputs->getParDouble("Radius");
 
 		const OP_CHOPInput* volumeBoxesInput = inputs->getParCHOP("Boxesemitterschop");
@@ -278,6 +279,8 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 
 		FlexSys->maxParticles = inputs->getParInt("Maxparticles");
+
+
 
 		
 
@@ -1132,7 +1135,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 	{
 		OP_NumericParameter np;
 
-		np.name = "Maxparticles";=
+		np.name = "Maxparticles";
 		np.label = "Max Number of Particles";
 		np.page = "Solver";
 		np.defaultValues[0] = 10000;
