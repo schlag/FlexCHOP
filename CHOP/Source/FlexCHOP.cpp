@@ -121,10 +121,10 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_params.particleFriction = inputs->getParDouble("Particlefriction");
 	FlexSys->g_params.restitution = inputs->getParDouble("Restitution");
 	FlexSys->g_params.adhesion = inputs->getParDouble("Adhesion");
-	FlexSys->g_params.sleepThreshold = inputs->getParDouble("SleepThreshold");
+	FlexSys->g_params.sleepThreshold = inputs->getParDouble("Sleepthreshold");
 	FlexSys->g_params.maxSpeed = inputs->getParDouble("Maxspeed");
-	FlexSys->g_params.maxAcceleration = inputs->getParDouble("MaxAcceleration");
-	FlexSys->g_params.shockPropagation = inputs->getParDouble("ShockPropagation");
+	FlexSys->g_params.maxAcceleration = inputs->getParDouble("Maxacceleration");
+	FlexSys->g_params.shockPropagation = inputs->getParDouble("Shockpropagation");
 	FlexSys->g_params.dissipation = inputs->getParDouble("Dissipation");
 	FlexSys->g_params.damping = inputs->getParDouble("Damping");
 
@@ -136,8 +136,8 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_params.viscosity = inputs->getParDouble("Viscosity");
 	FlexSys->g_params.vorticityConfinement = inputs->getParDouble("Vorticityconfinement");
 	FlexSys->g_params.smoothing = inputs->getParDouble("Smoothing");
-	FlexSys->g_params.solidPressure = inputs->getParDouble("SolidPressure");
-	FlexSys->g_params.freeSurfaceDrag = inputs->getParDouble("FreeSurfaceDrag");
+	FlexSys->g_params.solidPressure = inputs->getParDouble("Solidpressure");
+	FlexSys->g_params.freeSurfaceDrag = inputs->getParDouble("Freesurfacedrag");
 	FlexSys->g_params.buoyancy = inputs->getParDouble("Buoyancy");
 
 
@@ -157,25 +157,25 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_params.diffuseSortAxis[0] = diffuseSortAxis[0];
 	FlexSys->g_params.diffuseSortAxis[1] = diffuseSortAxis[1];
 	FlexSys->g_params.diffuseSortAxis[2] = diffuseSortAxis[2];
-	FlexSys->g_params.diffuseThreshold = inputs->getParDouble("DiffuseThreshold");
-	FlexSys->g_params.diffuseBuoyancy = inputs->getParDouble("DiffuseBuoyancy");
-	FlexSys->g_params.diffuseDrag = inputs->getParDouble("DiffuseDrag");
-	FlexSys->g_params.diffuseBallistic = inputs->getParInt("DiffuseBallistic");
-	FlexSys->g_params.diffuseLifetime = inputs->getParDouble("DiffuseLifetime");
+	FlexSys->g_params.diffuseThreshold = inputs->getParDouble("Diffusethreshold");
+	FlexSys->g_params.diffuseBuoyancy = inputs->getParDouble("Diffusebuoyancy");
+	FlexSys->g_params.diffuseDrag = inputs->getParDouble("Diffusedrag");
+	FlexSys->g_params.diffuseBallistic = inputs->getParInt("Diffuseballistic");
+	FlexSys->g_params.diffuseLifetime = inputs->getParDouble("Diffuselifetime");
 
 	//Rigid
-	FlexSys->g_params.plasticThreshold = inputs->getParDouble("PlasticThreshold");
-	FlexSys->g_params.plasticCreep = inputs->getParDouble("PlasticCreep");
+	FlexSys->g_params.plasticThreshold = inputs->getParDouble("Plasticthreshold");
+	FlexSys->g_params.plasticCreep = inputs->getParDouble("Plasticcreep");
 
 	//ForceField
 	double mPosition[3];
-	inputs->getParDouble3("ForcefieldPos", mPosition[0], mPosition[1], mPosition[2]);
+	inputs->getParDouble3("Forcefieldpos", mPosition[0], mPosition[1], mPosition[2]);
 	FlexSys->g_forcefield.mPosition[0] = mPosition[0];
 	FlexSys->g_forcefield.mPosition[1] = mPosition[1];
 	FlexSys->g_forcefield.mPosition[2] = mPosition[2];
-	FlexSys->g_forcefield.mRadius = inputs->getParDouble("ForcefieldRadius");
-	FlexSys->g_forcefield.mStrength = inputs->getParDouble("ForcefieldStrength");
-	FlexSys->g_forcefield.mLinearFalloff = inputs->getParInt("ForcefieldLinearFalloff");
+	FlexSys->g_forcefield.mRadius = inputs->getParDouble("Forcefieldradius");
+	FlexSys->g_forcefield.mStrength = inputs->getParDouble("Forcefieldstrength");
+	FlexSys->g_forcefield.mLinearFalloff = inputs->getParInt("Forcefieldlinearfalloff");
 	FlexSys->g_forcefield.mMode = eNvFlexExtModeForce; // OR eNvFlexExtModeImpulse OR eNvFlexExtModeVelocityChange
 }
 
@@ -670,11 +670,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//SleepThreshold
+	//Sleepthreshold
 	{
 		OP_NumericParameter np;
 
-		np.name = "SleepThreshold";
+		np.name = "Sleepthreshold";
 		np.label = "Sleep Threshold";
 		np.defaultValues[0] = 0.0f;
 		np.page = "Common";
@@ -696,11 +696,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//MaxAcceleration
+	//Maxacceleration
 	{
 		OP_NumericParameter np;
 
-		np.name = "MaxAcceleration";
+		np.name = "Maxacceleration";
 		np.label = "Max Acceleration";
 		np.page = "Common";
 		np.defaultValues[0] = 100.0f;
@@ -709,11 +709,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//ShockPropagation
+	//Shockpropagation
 	{
 		OP_NumericParameter np;
 
-		np.name = "ShockPropagation";
+		np.name = "Shockpropagation";
 		np.label = "Shock Propagation";
 		np.defaultValues[0] = 0.0f;
 		np.page = "Common";
@@ -828,11 +828,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//SolidPressure
+	//Solidpressure
 	{
 		OP_NumericParameter np;
 
-		np.name = "SolidPressure";
+		np.name = "Solidpressure";
 		np.label = "Solid Pressure";
 		np.defaultValues[0] = 1.0f;
 		np.page = "Fluid";
@@ -841,11 +841,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//FreeSurfaceDrag
+	//Freesurfacedrag
 	{
 		OP_NumericParameter np;
 
-		np.name = "FreeSurfaceDrag";
+		np.name = "Freesurfacedrag";
 		np.label = "Free Surface Drag";
 		np.defaultValues[0] = 0.0f;
 		np.page = "Fluid";
@@ -913,11 +913,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 	////Diffuse
 
-	//DiffuseThreshold
+	//Diffusethreshold
 	{
 		OP_NumericParameter np;
 
-		np.name = "DiffuseThreshold";
+		np.name = "Diffusethreshold";
 		np.label = "Diffuse Threshold";
 		np.defaultValues[0] = 100.0f;
 		np.page = "Diffuse";
@@ -926,11 +926,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//DiffuseBuoyancy
+	//Diffusebuoyancy
 	{
 		OP_NumericParameter np;
 
-		np.name = "DiffuseBuoyancy";
+		np.name = "Diffusebuoyancy";
 		np.label = "Diffuse Buoyancy";
 		np.defaultValues[0] = 1.0f;
 		np.page = "Diffuse";
@@ -939,11 +939,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//DiffuseDrag
+	//Diffusedrag
 	{
 		OP_NumericParameter np;
 
-		np.name = "DiffuseDrag";
+		np.name = "Diffusedrag";
 		np.label = "Diffuse Drag";
 		np.defaultValues[0] = 0.8f;
 		np.page = "Diffuse";
@@ -952,11 +952,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//DiffuseBallistic
+	//Diffuseballistic
 	{
 		OP_NumericParameter np;
 
-		np.name = "DiffuseBallistic";
+		np.name = "Diffuseballistic";
 		np.label = "Diffuse Ballistic";
 		np.defaultValues[0] = 16;
 		np.page = "Diffuse";
@@ -981,11 +981,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//DiffuseLifetime
+	//Diffuselifetime
 	{
 		OP_NumericParameter np;
 
-		np.name = "DiffuseLifetime";
+		np.name = "Diffuselifetime";
 		np.label = "Diffuse Lifetime";
 		np.defaultValues[0] = 2.0f;
 		np.page = "Diffuse";
@@ -996,11 +996,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 	////Rigid
 
-	//PlasticThreshold
+	//Plasticthreshold
 	{
 		OP_NumericParameter np;
 
-		np.name = "PlasticThreshold";
+		np.name = "Plasticthreshold";
 		np.label = "Plastic Threshold";
 		np.defaultValues[0] = 0.0f;
 		np.page = "Rigid";
@@ -1009,11 +1009,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//PlasticCreep
+	//Plasticcreep
 	{
 		OP_NumericParameter np;
 
-		np.name = "PlasticCreep";
+		np.name = "Plasticcreep";
 		np.label = "Plastic Creep";
 		np.defaultValues[0] = 0.0f;
 		np.page = "Rigid";
@@ -1143,11 +1143,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 	////ForceField
 	
-	// ForcefieldPos
+	// Forcefieldpos
 	{
 		OP_NumericParameter np;
 
-		np.name = "ForcefieldPos";
+		np.name = "Forcefieldpos";
 		np.label = "Forcefield Position";
 		np.page = "Force";
 		np.defaultValues[0] = 0.0f;
@@ -1158,11 +1158,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	// ForcefieldRadius
+	// Forcefieldradius
 	{
 		OP_NumericParameter np;
 
-		np.name = "ForcefieldRadius";
+		np.name = "Forcefieldradius";
 		np.label = "Forcefield Radius";
 		np.page = "Force";
 		np.defaultValues[0] = 1.0;
@@ -1171,11 +1171,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	// ForcefieldStrength
+	// Forcefieldstrength
 	{
 		OP_NumericParameter np;
 
-		np.name = "ForcefieldStrength";
+		np.name = "Forcefieldstrength";
 		np.label = "Forcefield Strength";
 		np.page = "Force";
 		np.defaultValues[0] = -30.0;
@@ -1184,11 +1184,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	// ForcefieldLinearFalloff
+	// Forcefieldlinearfalloff
 	{
 		OP_NumericParameter np;
 
-		np.name = "ForcefieldLinearFalloff";
+		np.name = "Forcefieldlinearfalloff";
 		np.label = "Forcefield Linear Falloff";
 		np.page = "Force";
 		np.defaultValues[0] = 1.0;
