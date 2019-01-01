@@ -153,7 +153,7 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 
 	//Diffuse
 	double diffuseSortAxis[3];
-	inputs->getParDouble3("DiffuseSortAxis", diffuseSortAxis[0], diffuseSortAxis[1], diffuseSortAxis[2]);
+	inputs->getParDouble3("Diffusesortaxis", diffuseSortAxis[0], diffuseSortAxis[1], diffuseSortAxis[2]);
 	FlexSys->g_params.diffuseSortAxis[0] = diffuseSortAxis[0];
 	FlexSys->g_params.diffuseSortAxis[1] = diffuseSortAxis[1];
 	FlexSys->g_params.diffuseSortAxis[2] = diffuseSortAxis[2];
@@ -965,11 +965,11 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//DiffuseSortAxis
+	//Diffusesortaxis
 	{
 		OP_NumericParameter np;
 
-		np.name = "DiffuseSortAxis";
+		np.name = "Diffusesortaxis";
 		np.label = "Diffuse Sort Axis";
 		np.page = "Diffuse";
 
