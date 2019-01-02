@@ -463,7 +463,7 @@ void FlexSystem::postInitScene(){
 		if (g_meshPath && strlen(g_meshPath) > 0) {
 			float size = 1.2f;
 			g_mesh = ImportMesh(g_meshPath);
-			CreateParticleShape(g_mesh, Vec3(0, 0, 0), size, 0.0f, g_params.radius, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
+			CreateParticleShape(g_mesh, g_shapePos, size, 0.0f, g_params.radius, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
 		}
 		
 	} else {

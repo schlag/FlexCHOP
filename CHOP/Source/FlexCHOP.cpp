@@ -180,6 +180,11 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 
 	FlexSys->g_useParticleShape = inputs->getParInt("Particleshapeuse");
 	FlexSys->g_meshPath = inputs->getParString("Particleshapemeshpath");
+	double shapePos[3];
+	inputs->getParDouble3("Particleshapepos", shapePos[0], shapePos[1], shapePos[2]);
+	FlexSys->g_shapePos[0] = shapePos[0];
+	FlexSys->g_shapePos[1] = shapePos[1];
+	FlexSys->g_shapePos[2] = shapePos[2];
 }
 
 const char*
@@ -1234,6 +1239,21 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.page = "Shape";
 
 		OP_ParAppendResult res = manager->appendToggle(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Particleshapepos
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particleshapepos";
+		np.label = "Position";
+		np.defaultValues[0] = 0.0f;
+		np.defaultValues[1] = 0.0f;
+		np.defaultValues[2] = 0.0f;
+		np.page = "Shape";
+
+		OP_ParAppendResult res = manager->appendXYZ(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 

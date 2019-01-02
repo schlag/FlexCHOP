@@ -224,6 +224,7 @@ class FlexSystem {
 	int cursor;
 
 	const char *g_meshPath;
+	Vec3 g_shapePos;
 
 	vector<int> g_meshSkinIndices;
 	vector<float> g_meshSkinWeights;
