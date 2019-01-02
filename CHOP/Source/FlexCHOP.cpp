@@ -1347,6 +1347,19 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
+	//Particleshapescale
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particleshapescale";
+		np.label = "Scale";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Shape";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
 	//Particleshapespacing
 	{
 		OP_NumericParameter np;
