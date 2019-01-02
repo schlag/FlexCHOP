@@ -187,9 +187,10 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_shapePos[1] = shapePos[1];
 	FlexSys->g_shapePos[2] = shapePos[2];
 
+	FlexSys->g_shapeRot = inputs->getParDouble("Particleshaperot");
 	FlexSys->g_shapeScale = inputs->getParDouble("Particleshapescale");
 	FlexSys->g_shapeSpacing = inputs->getParDouble("Particleshapespacing");
-	// FlexSys->g_stiffness = inputs->getParDouble("Particleshapestiffness");
+	FlexSys->g_stiffness = inputs->getParDouble("Particleshapestiffness");
 
 
 	//Collision
@@ -428,12 +429,12 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 	int simulate = inputs->getParInt("Simulate");
 
-	// if (simulate == 1) {
-	// 	if (FlexSys->g_useParticleShape) {
-	// 		for (int i = 0; i < FlexSys->g_buffers->rigidCoefficients.size(); ++i)
-	// 			FlexSys->g_buffers->rigidCoefficients[i] = FlexSys->g_stiffness;
-	// 	}
-	// }
+	if (simulate == 1) {
+		if (FlexSys->g_useParticleShape && FlexSys->g_stiffness > 0) {
+			for (int i = 0; i < FlexSys->g_buffers->rigidCoefficients.size(); ++i)
+				FlexSys->g_buffers->rigidCoefficients[i] = FlexSys->g_stiffness;
+		}
+	}
 
 	if (reset == 1) {
 
@@ -1333,13 +1334,13 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	//Particleshapescale
+	//Particleshaperot
 	{
 		OP_NumericParameter np;
 
-		np.name = "Particleshapescale";
-		np.label = "Scale";
-		np.defaultValues[0] = 1.0f;
+		np.name = "Particleshaperot";
+		np.label = "Rotation";
+		np.defaultValues[0] = 0.0f;
 		np.page = "Shape";
 
 		OP_ParAppendResult res = manager->appendFloat(np);

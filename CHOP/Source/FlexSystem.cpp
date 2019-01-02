@@ -466,7 +466,11 @@ void FlexSystem::postInitScene(){
 		}
 		if (g_meshPath && strlen(g_meshPath) > 0) {
 			g_mesh = ImportMesh(g_meshPath);
-			CreateParticleShape(g_mesh, g_shapePos, g_shapeScale, 0.0f, g_params.radius * g_shapeSpacing, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
+			if (g_params.fluid) {
+				CreateParticleShape(g_mesh, g_shapePos, g_shapeScale, g_shapeRot, g_params.radius * g_shapeSpacing, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid), false, 0.0f);
+			} else {
+				CreateParticleShape(g_mesh, g_shapePos, g_shapeScale, g_shapeRot, g_params.radius * g_shapeSpacing, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
+			}
 		}
 		
 	} else {
@@ -1047,9 +1051,9 @@ void FlexSystem::update(){
 		NvFlexSetParams(g_flex, &g_params);
 		NvFlexExtSetForceFields(g_forcefieldCallback, &g_forcefield, 1);
 
-		// if (g_useParticleShape) {
-		// 	NvFlexSetRigids(g_flex, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
-		// }
+		if (g_useParticleShape && g_stiffness > 0) {
+			NvFlexSetRigids(g_flex, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
+		}
 
 		NvFlexUpdateSolver(g_flex, g_dt, g_numSubsteps, g_profile);
 

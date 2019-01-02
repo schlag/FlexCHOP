@@ -225,6 +225,7 @@ class FlexSystem {
 
 	const char *g_meshPath;
 	Vec3 g_shapePos;
+	double g_shapeRot;
 	double g_shapeSpacing;
 	double g_shapeScale;
 	double g_stiffness;
