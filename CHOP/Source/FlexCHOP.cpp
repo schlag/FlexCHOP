@@ -127,7 +127,7 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_params.shockPropagation = inputs->getParDouble("Shockpropagation");
 	FlexSys->g_params.dissipation = inputs->getParDouble("Dissipation");
 	FlexSys->g_params.damping = inputs->getParDouble("Damping");
-
+	FlexSys->g_params.relaxationFactor = inputs->getParDouble("Relaxationfactor");
 
 	////Fluid
 	FlexSys->g_params.fluid = inputs->getParInt("Fluid");
@@ -778,6 +778,19 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.name = "Damping";
 		np.label = "Damping";
 		np.defaultValues[0] = 0;
+		np.page = "Common";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Relaxationfactor
+	{
+		OP_NumericParameter np;
+
+		np.name = "Relaxationfactor";
+		np.label = "Relaxation Factor";
+		np.defaultValues[0] = 1.0f;
 		np.page = "Common";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
