@@ -185,6 +185,10 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_shapePos[0] = shapePos[0];
 	FlexSys->g_shapePos[1] = shapePos[1];
 	FlexSys->g_shapePos[2] = shapePos[2];
+
+	FlexSys->g_shapeScale = inputs->getParDouble("Particleshapescale");
+	FlexSys->g_shapeSpacing = inputs->getParDouble("Particleshapespacing");
+	FlexSys->g_stiffness = inputs->getParDouble("Particleshapestiffness");
 }
 
 const char*
@@ -418,6 +422,13 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 	int simulate = inputs->getParInt("Simulate");
 
+	if (simulate == 1) {
+		if (FlexSys->g_useParticleShape) {
+			for (int i = 0; i < FlexSys->g_buffers->rigidCoefficients.size(); ++i)
+				FlexSys->g_buffers->rigidCoefficients[i] = FlexSys->g_stiffness;
+		}
+	}
+
 	if (reset == 1) {
 
 		FlexSys->postInitScene();
@@ -443,8 +454,9 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 		timer = 1000*(t2 - t1);
 
-		if (simulate == 1)
+		if (simulate == 1) {
 			FlexSys->update();
+		}
 
 
 		//activeCount = FlexSys->activeParticles;
@@ -1260,6 +1272,45 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.page = "Shape";
 
 		OP_ParAppendResult res = manager->appendXYZ(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Particleshapescale
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particleshapescale";
+		np.label = "Scale";
+		np.defaultValues[0] = 1.0f;
+		np.page = "Shape";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Particleshapespacing
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particleshapespacing";
+		np.label = "Spacing";
+		np.defaultValues[0] = 0.5f;
+		np.page = "Shape";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Particleshapestiffness
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particleshapestiffness";
+		np.label = "Stiffness";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Shape";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 

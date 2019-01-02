@@ -369,6 +369,10 @@ void FlexSystem::initParams() {
 	g_forcefield.mStrength = -30.0f;
 	g_forcefield.mLinearFalloff = true;
 	g_forcefield.mMode = eNvFlexExtModeForce;
+
+	g_shapeScale = 1.0;
+	g_shapeSpacing = 0.5;
+	g_stiffness = 0.0;
 }
 
 void FlexSystem::initScene(){
@@ -461,9 +465,8 @@ void FlexSystem::postInitScene(){
 			delete g_mesh;
 		}
 		if (g_meshPath && strlen(g_meshPath) > 0) {
-			float size = 1.2f;
 			g_mesh = ImportMesh(g_meshPath);
-			CreateParticleShape(g_mesh, g_shapePos, size, 0.0f, g_params.radius, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
+			CreateParticleShape(g_mesh, g_shapePos, g_shapeScale, 0.0f, g_params.radius * g_shapeSpacing, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
 		}
 		
 	} else {
