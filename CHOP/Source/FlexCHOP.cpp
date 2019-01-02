@@ -482,7 +482,7 @@ FlexCHOP::getNumInfoCHOPChans()
 {
 	// We return the number of channel we want to output to any Info CHOP
 	// connected to the CHOP. In this example we are just going to send one channel.
-	return 3;
+	return 4;
 }
 
 void
@@ -509,6 +509,10 @@ FlexCHOP::getInfoCHOPChan(int index,
 		chan->value = FlexSys->g_timers.solveVelocities;
 		break;
 
+	case 3:
+		chan->name = "numParticles";
+		chan->value = FlexSys->g_buffers->positions.size();
+		break;
 
 	}
 }
@@ -1353,7 +1357,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 		np.name = "Particleshapescale";
 		np.label = "Scale";
-		np.defaultValues[0] = 0.0f;
+		np.defaultValues[0] = 1.0f;
 		np.page = "Shape";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
@@ -1366,7 +1370,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 		np.name = "Particleshapespacing";
 		np.label = "Spacing";
-		np.defaultValues[0] = 0.5f;
+		np.defaultValues[0] = 1.0f;
 		np.page = "Shape";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
