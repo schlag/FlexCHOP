@@ -456,20 +456,32 @@ void FlexSystem::postInitScene(){
 
 	g_maxDiffuseParticles = 0;
 
-	if (g_params.fluid) {
-
-		for (int i = 0; i < nVolumeBoxes; i++) {
-
-			CreateCenteredParticleGrid(Point3(g_volumeBoxes[i].mPos.x, g_volumeBoxes[i].mPos.y, g_volumeBoxes[i].mPos.z), g_volumeBoxes[i].mRot, Point3(g_volumeBoxes[i].mSize.x, g_volumeBoxes[i].mSize.y, g_volumeBoxes[i].mSize.z), g_params.fluidRestDistance, Vec3(0.0f), 1, false, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid), g_params.fluidRestDistance*0.01f);
+	if (g_useParticleShape) {
+		if (g_mesh) {
+			delete g_mesh;
 		}
-	}
-	else {
-
-		for (int i = 0; i < nVolumeBoxes; i++) {
-
-			CreateCenteredParticleGrid(Point3(g_volumeBoxes[i].mPos.x, g_volumeBoxes[i].mPos.y, g_volumeBoxes[i].mPos.z), g_volumeBoxes[i].mRot, Point3(g_volumeBoxes[i].mSize.x, g_volumeBoxes[i].mSize.y, g_volumeBoxes[i].mSize.z), g_params.radius, Vec3(0.0f), 1, false, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), g_params.radius*0.01f);
+		if (g_meshPath && strlen(g_meshPath) > 0) {
+			float size = 1.2f;
+			g_mesh = ImportMesh(g_meshPath);
+			CreateParticleShape(g_mesh, Vec3(0, 0, 0), size, 0.0f, g_params.radius, Vec3(0.0f, 0.0f, 0.0f), 1.0f, true, 1.f, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), false, 0.0f);
 		}
+		
+	} else {
+		if (g_params.fluid) {
 
+			for (int i = 0; i < nVolumeBoxes; i++) {
+
+				CreateCenteredParticleGrid(Point3(g_volumeBoxes[i].mPos.x, g_volumeBoxes[i].mPos.y, g_volumeBoxes[i].mPos.z), g_volumeBoxes[i].mRot, Point3(g_volumeBoxes[i].mSize.x, g_volumeBoxes[i].mSize.y, g_volumeBoxes[i].mSize.z), g_params.fluidRestDistance, Vec3(0.0f), 1, false, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide | eNvFlexPhaseFluid), g_params.fluidRestDistance*0.01f);
+			}
+		}
+		else {
+
+			for (int i = 0; i < nVolumeBoxes; i++) {
+
+				CreateCenteredParticleGrid(Point3(g_volumeBoxes[i].mPos.x, g_volumeBoxes[i].mPos.y, g_volumeBoxes[i].mPos.z), g_volumeBoxes[i].mRot, Point3(g_volumeBoxes[i].mSize.x, g_volumeBoxes[i].mSize.y, g_volumeBoxes[i].mSize.z), g_params.radius, Vec3(0.0f), 1, false, NvFlexMakePhase(0, eNvFlexPhaseSelfCollide), g_params.radius*0.01f);
+			}
+
+		}
 	}
 
 	g_params.anisotropyScale = 3.0f/g_params.radius;
@@ -622,6 +634,240 @@ void FlexSystem::CreateCenteredParticleGrid(Point3 center, Vec3 rotation, Point3
 				
 			}
 		}
+	}
+}
+
+void FlexSystem::CreateParticleShape(const Mesh *srcMesh, Vec3 lower, Vec3 scale, float rotation, float spacing, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, bool skin, float jitter, Vec3 skinOffset, float skinExpand, Vec4 color, float springStiffness)
+{
+	if (rigid && g_buffers->rigidIndices.empty())
+		g_buffers->rigidOffsets.push_back(0);
+
+	if (!srcMesh)
+		return;
+
+	// duplicate mesh
+	Mesh mesh;
+	mesh.AddMesh(*srcMesh);
+
+	int startIndex = int(g_buffers->positions.size());
+
+	{
+		mesh.Transform(RotationMatrix(rotation, Vec3(0.0f, 1.0f, 0.0f)));
+
+		Vec3 meshLower, meshUpper;
+		mesh.GetBounds(meshLower, meshUpper);
+
+		Vec3 edges = meshUpper - meshLower;
+		float maxEdge = max(max(edges.x, edges.y), edges.z);
+
+		// put mesh at the origin and scale to specified size
+		Matrix44 xform = ScaleMatrix(scale / maxEdge) * TranslationMatrix(Point3(-meshLower));
+
+		mesh.Transform(xform);
+		mesh.GetBounds(meshLower, meshUpper);
+
+		// recompute expanded edges
+		edges = meshUpper - meshLower;
+		maxEdge = max(max(edges.x, edges.y), edges.z);
+
+		// tweak spacing to avoid edge cases for particles laying on the boundary
+		// just covers the case where an edge is a whole multiple of the spacing.
+		float spacingEps = spacing * (1.0f - 1e-4f);
+
+		// make sure to have at least one particle in each dimension
+		int dx, dy, dz;
+		dx = spacing > edges.x ? 1 : int(edges.x / spacingEps);
+		dy = spacing > edges.y ? 1 : int(edges.y / spacingEps);
+		dz = spacing > edges.z ? 1 : int(edges.z / spacingEps);
+
+		int maxDim = max(max(dx, dy), dz);
+
+		// expand border by two voxels to ensure adequate sampling at edges
+		meshLower -= 2.0f * Vec3(spacing);
+		meshUpper += 2.0f * Vec3(spacing);
+		maxDim += 4;
+
+		vector<uint32_t> voxels(maxDim * maxDim * maxDim);
+
+		// we shift the voxelization bounds so that the voxel centers
+		// lie symmetrically to the center of the object. this reduces the
+		// chance of missing features, and also better aligns the particles
+		// with the mesh
+		Vec3 meshOffset;
+		meshOffset.x = 0.5f * (spacing - (edges.x - (dx - 1) * spacing));
+		meshOffset.y = 0.5f * (spacing - (edges.y - (dy - 1) * spacing));
+		meshOffset.z = 0.5f * (spacing - (edges.z - (dz - 1) * spacing));
+		meshLower -= meshOffset;
+
+		//Voxelize(*mesh, dx, dy, dz, &voxels[0], meshLower - Vec3(spacing*0.05f) , meshLower + Vec3(maxDim*spacing) + Vec3(spacing*0.05f));
+		Voxelize((const float *)&mesh.m_positions[0], mesh.m_positions.size(), (const int *)&mesh.m_indices[0], mesh.m_indices.size(), maxDim, maxDim, maxDim, &voxels[0], meshLower, meshLower + Vec3(maxDim * spacing));
+
+		vector<int> indices(maxDim * maxDim * maxDim);
+		vector<float> sdf(maxDim * maxDim * maxDim);
+		MakeSDF(&voxels[0], maxDim, maxDim, maxDim, &sdf[0]);
+
+		for (int x = 0; x < maxDim; ++x)
+		{
+			for (int y = 0; y < maxDim; ++y)
+			{
+				for (int z = 0; z < maxDim; ++z)
+				{
+					const int index = z * maxDim * maxDim + y * maxDim + x;
+
+					// if voxel is marked as occupied the add a particle
+					if (voxels[index])
+					{
+						if (rigid)
+							g_buffers->rigidIndices.push_back(int(g_buffers->positions.size()));
+
+						Vec3 position = lower + meshLower + spacing * Vec3(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f) + RandomUnitVector() * jitter;
+
+						// normalize the sdf value and transform to world scale
+						Vec3 n = SafeNormalize(SampleSDFGrad(&sdf[0], maxDim, x, y, z));
+						float d = sdf[index] * maxEdge;
+
+						if (rigid)
+							g_buffers->rigidLocalNormals.push_back(Vec4(n, d));
+
+						// track which particles are in which cells
+						indices[index] = g_buffers->positions.size();
+
+						g_buffers->positions.push_back(Vec4(position.x, position.y, position.z, invMass));
+						g_buffers->velocities.push_back(velocity);
+						g_buffers->phases.push_back(phase);
+					}
+				}
+			}
+		}
+		mesh.Transform(ScaleMatrix(1.0f + skinExpand) * TranslationMatrix(Point3(-0.5f * (meshUpper + meshLower))));
+		mesh.Transform(TranslationMatrix(Point3(lower + 0.5f * (meshUpper + meshLower))));
+
+		if (springStiffness > 0.0f)
+		{
+			// construct cross link springs to occupied cells
+			for (int x = 0; x < maxDim; ++x)
+			{
+				for (int y = 0; y < maxDim; ++y)
+				{
+					for (int z = 0; z < maxDim; ++z)
+					{
+						const int centerCell = z * maxDim * maxDim + y * maxDim + x;
+
+						// if voxel is marked as occupied the add a particle
+						if (voxels[centerCell])
+						{
+							const int width = 1;
+
+							// create springs to all the neighbors within the width
+							for (int i = x - width; i <= x + width; ++i)
+							{
+								for (int j = y - width; j <= y + width; ++j)
+								{
+									for (int k = z - width; k <= z + width; ++k)
+									{
+										const int neighborCell = k * maxDim * maxDim + j * maxDim + i;
+
+										if (neighborCell > 0 && neighborCell < int(voxels.size()) && voxels[neighborCell] && neighborCell != centerCell)
+										{
+											CreateSpring(indices[neighborCell], indices[centerCell], springStiffness);
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (skin)
+	{
+		g_buffers->rigidMeshSize.push_back(mesh.GetNumVertices());
+
+		int startVertex = 0;
+
+		if (!g_mesh)
+			g_mesh = new Mesh();
+
+		// append to mesh
+		startVertex = g_mesh->GetNumVertices();
+
+		g_mesh->Transform(TranslationMatrix(Point3(skinOffset)));
+		g_mesh->AddMesh(mesh);
+
+		const Colour colors[7] =
+				{
+						Colour(0.0f, 0.5f, 1.0f),
+						Colour(0.797f, 0.354f, 0.000f),
+						Colour(0.000f, 0.349f, 0.173f),
+						Colour(0.875f, 0.782f, 0.051f),
+						Colour(0.01f, 0.170f, 0.453f),
+						Colour(0.673f, 0.111f, 0.000f),
+						Colour(0.612f, 0.194f, 0.394f)};
+
+		for (uint32_t i = startVertex; i < g_mesh->GetNumVertices(); ++i)
+		{
+			int indices[4] = {-1, -1, -1, -1};
+			float distances[4] = {FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX};
+
+			if (LengthSq(color) == 0.0f)
+				g_mesh->m_colours[i] = 1.25f * colors[phase % 7];
+			else
+				g_mesh->m_colours[i] = Colour(color);
+
+			// find closest n particles
+			for (int j = startIndex; j < g_buffers->positions.size(); ++j)
+			{
+				float dSq = LengthSq(Vec3(g_mesh->m_positions[i]) - Vec3(g_buffers->positions[j]));
+
+				// insertion sort
+				int w = 0;
+				for (; w < 4; ++w)
+					if (dSq < distances[w])
+						break;
+
+				if (w < 4)
+				{
+					// shuffle down
+					for (int s = 3; s > w; --s)
+					{
+						indices[s] = indices[s - 1];
+						distances[s] = distances[s - 1];
+					}
+
+					distances[w] = dSq;
+					indices[w] = int(j);
+				}
+			}
+
+			// weight particles according to distance
+			float wSum = 0.0f;
+
+			for (int w = 0; w < 4; ++w)
+			{
+				// convert to inverse distance
+				distances[w] = 1.0f / (0.1f + powf(distances[w], .125f));
+
+				wSum += distances[w];
+			}
+
+			float weights[4];
+			for (int w = 0; w < 4; ++w)
+				weights[w] = distances[w] / wSum;
+
+			for (int j = 0; j < 4; ++j)
+			{
+				g_meshSkinIndices.push_back(indices[j]);
+				g_meshSkinWeights.push_back(weights[j]);
+			}
+		}
+	}
+
+	if (rigid)
+	{
+		g_buffers->rigidCoefficients.push_back(rigidStiffness);
+		g_buffers->rigidOffsets.push_back(int(g_buffers->rigidIndices.size()));
 	}
 }
 
@@ -811,4 +1057,40 @@ void FlexSystem::update(){
 
 		activeParticles = NvFlexGetActiveCount(g_flex);
 
+}
+
+void FlexSystem::CreateSpring(int i, int j, float stiffness, float give)
+{
+	g_buffers->springIndices.push_back(i);
+	g_buffers->springIndices.push_back(j);
+	g_buffers->springLengths.push_back((1.0f + give) * Length(Vec3(g_buffers->positions[i]) - Vec3(g_buffers->positions[j])));
+	g_buffers->springStiffness.push_back(stiffness);
+}
+
+float FlexSystem::SampleSDF(const float *sdf, int dim, int x, int y, int z)
+{
+	assert(x < dim && x >= 0);
+	assert(y < dim && y >= 0);
+	assert(z < dim && z >= 0);
+
+	return sdf[z * dim * dim + y * dim + x];
+}
+
+// return normal of signed distance field
+Vec3 FlexSystem::SampleSDFGrad(const float *sdf, int dim, int x, int y, int z)
+{
+	int x0 = max(x - 1, 0);
+	int x1 = min(x + 1, dim - 1);
+
+	int y0 = max(y - 1, 0);
+	int y1 = min(y + 1, dim - 1);
+
+	int z0 = max(z - 1, 0);
+	int z1 = min(z + 1, dim - 1);
+
+	float dx = (SampleSDF(sdf, dim, x1, y, z) - SampleSDF(sdf, dim, x0, y, z)) * (dim * 0.5f);
+	float dy = (SampleSDF(sdf, dim, x, y1, z) - SampleSDF(sdf, dim, x, y0, z)) * (dim * 0.5f);
+	float dz = (SampleSDF(sdf, dim, x, y, z1) - SampleSDF(sdf, dim, x, y, z0)) * (dim * 0.5f);
+
+	return Vec3(dx, dy, dz);
 }

@@ -176,7 +176,10 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_forcefield.mRadius = inputs->getParDouble("Forcefieldradius");
 	FlexSys->g_forcefield.mStrength = inputs->getParDouble("Forcefieldstrength");
 	FlexSys->g_forcefield.mLinearFalloff = inputs->getParInt("Forcefieldlinearfalloff");
-	FlexSys->g_forcefield.mMode = eNvFlexExtModeForce; // OR eNvFlexExtModeImpulse OR eNvFlexExtModeVelocityChange
+	FlexSys->g_forcefield.mMode = (NvFlexExtForceMode)inputs->getParInt("Forcefieldmode"); // eNvFlexExtModeForce OR eNvFlexExtModeImpulse OR eNvFlexExtModeVelocityChange
+
+	FlexSys->g_useParticleShape = inputs->getParInt("Particleshapeuse");
+	FlexSys->g_meshPath = inputs->getParString("Particleshapemeshpath");
 }
 
 const char*
@@ -229,8 +232,6 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 		FlexSys->initScene();
 
-		if (FlexSys->g_forcefieldCallback)
-			NvFlexExtDestroyForceFieldCallback(FlexSys->g_forcefieldCallback);
 		FlexSys->g_forcefieldCallback = NvFlexExtCreateForceFieldCallback(FlexSys->g_flex);
 
 		FlexSys->g_params.radius = inputs->getParDouble("Radius");
@@ -1200,6 +1201,53 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		np.defaultValues[0] = 1.0;
 
 		OP_ParAppendResult res = manager->appendToggle(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Forcefieldmode
+	{
+		OP_StringParameter sp;
+
+		sp.name = "Forcefieldmode";
+		sp.label = "Forcefield Mode";
+		sp.page = "Force";
+
+		sp.defaultValue = "Force";
+
+		const char *names[] = {"Force", "Impulse", "Velocity"};
+		const char *labels[] = {"Force", "Impulse", "Velocity"};
+
+		OP_ParAppendResult res = manager->appendMenu(sp, 3, names, labels);
+		assert(res == OP_ParAppendResult::Success);
+	}
+	
+
+	// Particle Shape
+
+	//Particleshapeuse
+	{
+		OP_NumericParameter np;
+
+		np.name = "Particleshapeuse";
+		np.label = "Enable";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Shape";
+
+		OP_ParAppendResult res = manager->appendToggle(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Particleshapemeshpath
+	{
+		OP_StringParameter sp;
+
+		sp.name = "Particleshapemeshpath";
+		sp.label = "Mesh Path";
+		sp.page = "Shape";
+
+		sp.defaultValue = "";
+
+		OP_ParAppendResult res = manager->appendFile(sp);
 		assert(res == OP_ParAppendResult::Success);
 	}
 }

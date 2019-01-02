@@ -11,6 +11,8 @@
 
 #include <core/platform.h>
 #include <core/mesh.h>
+#include <core/voxelize.h>
+#include <core/sdf.h>
 
 #include <core/perlin.h>
 
@@ -145,8 +147,9 @@ class FlexSystem {
 	void GetParticleBounds(Vec3& lower, Vec3& upper);
 	void CreateParticleGrid(Vec3 lower, int dimx, int dimy, int dimz, float radius, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, float jitter);
 	void CreateCenteredParticleGrid(Point3 position, Vec3 rotation, Point3 size, float restDistance, Vec3 velocity, float invMass, bool rigid, int phase, float jitter=0.005f);
-	
-	void ClearShapes();
+	void CreateParticleShape(const Mesh *srcMesh, Vec3 lower, Vec3 scale, float rotation, float spacing, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, bool skin, float jitter = 0.005f, Vec3 skinOffset = 0.0f, float skinExpand = 0.0f, Vec4 color = Vec4(0.0f), float springStiffness = 0.0f);
+
+			void ClearShapes();
 	void setShapes();
 
 	void AddSphere(float radius, Vec3 position, Quat rotation);
@@ -163,8 +166,12 @@ class FlexSystem {
 
 	void initScene();
 	void postInitScene();
-	
-	NvFlexSolver* g_flex;
+
+	void CreateSpring(int i, int j, float stiffness, float give = 0.0f);
+	float SampleSDF(const float *sdf, int dim, int x, int y, int z);
+	Vec3 SampleSDFGrad(const float *sdf, int dim, int x, int y, int z);
+
+	NvFlexSolver *g_flex;
 	NvFlexLibrary* g_flexLib;
 
 	NvFlexExtForceField g_forcefield;
@@ -178,6 +185,7 @@ class FlexSystem {
 	vector<int> g_inactiveIndices;
 
 	bool g_profile;
+	bool g_useParticleShape;
 
 	int activeParticles;
 	int maxParticles;
@@ -193,6 +201,8 @@ class FlexSystem {
 
 	Vec3 g_sceneLower;
 	Vec3 g_sceneUpper;
+
+	Mesh *g_mesh;
 
 
 	int g_maxDiffuseParticles;
@@ -213,7 +223,8 @@ class FlexSystem {
 
 	int cursor;
 
+	const char *g_meshPath;
 
-
-
+	vector<int> g_meshSkinIndices;
+	vector<float> g_meshSkinWeights;
 };
