@@ -1302,17 +1302,17 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 	}
 
 	//Particleshapestiffness
-	// {
-	// 	OP_NumericParameter np;
+	{
+		OP_NumericParameter np;
 
-	// 	np.name = "Particleshapestiffness";
-	// 	np.label = "Stiffness";
-	// 	np.defaultValues[0] = 0.0f;
-	// 	np.page = "Shape";
+		np.name = "Particleshapestiffness";
+		np.label = "Stiffness";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Shape";
 
-	// 	OP_ParAppendResult res = manager->appendFloat(np);
-	// 	assert(res == OP_ParAppendResult::Success);
-	// }
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
 
 	// Particleshapemeshpath
 	{
