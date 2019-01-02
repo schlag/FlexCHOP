@@ -227,8 +227,14 @@ FlexCHOP::execute(const CHOP_Output* output,
 	int posRender = 0;
 
 
-	int reset = inputs->getParInt("Reset");
-
+	static int lastReset = 0;
+	int newReset = inputs->getParInt("Reset");
+	int reset = 0;
+	if (newReset == 1 && newReset != lastReset)
+	{
+		reset = 1;
+	}
+	lastReset = newReset;
 
 	if (reset == 1) {
 
