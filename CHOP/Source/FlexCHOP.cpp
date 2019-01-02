@@ -84,7 +84,7 @@ FlexCHOP::getOutputInfo(CHOP_OutputInfo *info)
 {
 	
 	if (FlexSys->g_flex){
-		info->numSamples = FlexSys->g_buffers->positions.size();
+		info->numSamples = FlexSys->g_buffers->activeIndices.size();
 	}else{
 		info->numSamples = 1;
 	}
@@ -482,7 +482,7 @@ FlexCHOP::getNumInfoCHOPChans()
 {
 	// We return the number of channel we want to output to any Info CHOP
 	// connected to the CHOP. In this example we are just going to send one channel.
-	return 4;
+	return 3;
 }
 
 void
@@ -507,11 +507,6 @@ FlexCHOP::getInfoCHOPChan(int index,
 	case 2:
 		chan->name = "solveVelocities";
 		chan->value = FlexSys->g_timers.solveVelocities;
-		break;
-
-	case 3:
-		chan->name = "numParticles";
-		chan->value = FlexSys->g_buffers->positions.size();
 		break;
 
 	}
