@@ -1047,9 +1047,9 @@ void FlexSystem::update(){
 		NvFlexSetParams(g_flex, &g_params);
 		NvFlexExtSetForceFields(g_forcefieldCallback, &g_forcefield, 1);
 
-		if (g_useParticleShape) {
-			NvFlexSetRigids(g_flex, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
-		}
+		// if (g_useParticleShape) {
+		// 	NvFlexSetRigids(g_flex, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
+		// }
 
 		NvFlexUpdateSolver(g_flex, g_dt, g_numSubsteps, g_profile);
 

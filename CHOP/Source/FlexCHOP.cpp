@@ -188,7 +188,7 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 
 	FlexSys->g_shapeScale = inputs->getParDouble("Particleshapescale");
 	FlexSys->g_shapeSpacing = inputs->getParDouble("Particleshapespacing");
-	FlexSys->g_stiffness = inputs->getParDouble("Particleshapestiffness");
+	// FlexSys->g_stiffness = inputs->getParDouble("Particleshapestiffness");
 }
 
 const char*
@@ -422,12 +422,12 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 	int simulate = inputs->getParInt("Simulate");
 
-	if (simulate == 1) {
-		if (FlexSys->g_useParticleShape) {
-			for (int i = 0; i < FlexSys->g_buffers->rigidCoefficients.size(); ++i)
-				FlexSys->g_buffers->rigidCoefficients[i] = FlexSys->g_stiffness;
-		}
-	}
+	// if (simulate == 1) {
+	// 	if (FlexSys->g_useParticleShape) {
+	// 		for (int i = 0; i < FlexSys->g_buffers->rigidCoefficients.size(); ++i)
+	// 			FlexSys->g_buffers->rigidCoefficients[i] = FlexSys->g_stiffness;
+	// 	}
+	// }
 
 	if (reset == 1) {
 
@@ -1302,17 +1302,17 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 	}
 
 	//Particleshapestiffness
-	{
-		OP_NumericParameter np;
+	// {
+	// 	OP_NumericParameter np;
 
-		np.name = "Particleshapestiffness";
-		np.label = "Stiffness";
-		np.defaultValues[0] = 0.0f;
-		np.page = "Shape";
+	// 	np.name = "Particleshapestiffness";
+	// 	np.label = "Stiffness";
+	// 	np.defaultValues[0] = 0.0f;
+	// 	np.page = "Shape";
 
-		OP_ParAppendResult res = manager->appendFloat(np);
-		assert(res == OP_ParAppendResult::Success);
-	}
+	// 	OP_ParAppendResult res = manager->appendFloat(np);
+	// 	assert(res == OP_ParAppendResult::Success);
+	// }
 
 	// Particleshapemeshpath
 	{
