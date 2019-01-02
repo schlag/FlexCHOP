@@ -139,7 +139,7 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_params.solidPressure = inputs->getParDouble("Solidpressure");
 	FlexSys->g_params.freeSurfaceDrag = inputs->getParDouble("Freesurfacedrag");
 	FlexSys->g_params.buoyancy = inputs->getParDouble("Buoyancy");
-
+	FlexSys->g_params.fluidRestDistance = inputs->getParDouble("Fluidrestdistance");
 
 	////Cloth
 	double wind[3];
@@ -166,6 +166,7 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	//Rigid
 	FlexSys->g_params.plasticThreshold = inputs->getParDouble("Plasticthreshold");
 	FlexSys->g_params.plasticCreep = inputs->getParDouble("Plasticcreep");
+	FlexSys->g_params.solidRestDistance = inputs->getParDouble("Solidrestdistance");
 
 	//ForceField
 	double mPosition[3];
@@ -189,6 +190,11 @@ void FlexCHOP::updateParams(OP_Inputs* inputs) {
 	FlexSys->g_shapeScale = inputs->getParDouble("Particleshapescale");
 	FlexSys->g_shapeSpacing = inputs->getParDouble("Particleshapespacing");
 	// FlexSys->g_stiffness = inputs->getParDouble("Particleshapestiffness");
+
+
+	//Collision
+	FlexSys->g_params.collisionDistance = inputs->getParDouble("Collisiondistance");
+	FlexSys->g_params.shapeCollisionMargin = inputs->getParDouble("Collisionmargin");
 }
 
 const char*
@@ -897,6 +903,19 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
+	//Fluidrestdistance
+	{
+		OP_NumericParameter np;
+
+		np.name = "Fluidrestdistance";
+		np.label = "Fluid Rest Distance";
+		np.defaultValues[0] = 0.01f;
+		np.page = "Fluid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
 	////Cloth
 
 	//Wind
@@ -1032,7 +1051,7 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 		np.name = "Plasticthreshold";
 		np.label = "Plastic Threshold";
-		np.defaultValues[0] = 0.0f;
+		np.defaultValues[0] = 0.01f;
 		np.page = "Rigid";
 
 		OP_ParAppendResult res = manager->appendFloat(np);
@@ -1045,6 +1064,19 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 
 		np.name = "Plasticcreep";
 		np.label = "Plastic Creep";
+		np.defaultValues[0] = 0.0f;
+		np.page = "Rigid";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Solidrestdistance
+	{
+		OP_NumericParameter np;
+
+		np.name = "Solidrestdistance";
+		np.label = "Solid Rest Distance";
 		np.defaultValues[0] = 0.0f;
 		np.page = "Rigid";
 
@@ -1114,6 +1146,32 @@ void FlexCHOP::setupParameters(OP_ParameterManager* manager)
 		sp.page = "Collisions";
 
 		OP_ParAppendResult res = manager->appendCHOP(sp);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Collisiondistance
+	{
+		OP_NumericParameter np;
+
+		np.name = "Collisiondistance";
+		np.label = "Collision Distance";
+		np.defaultValues[0] = 0.5f;
+		np.page = "Collisions";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	//Collisionmargin
+	{
+		OP_NumericParameter np;
+
+		np.name = "Collisionmargin";
+		np.label = "Collision Margin";
+		np.defaultValues[0] = 0.5f;
+		np.page = "Collisions";
+
+		OP_ParAppendResult res = manager->appendFloat(np);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
