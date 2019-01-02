@@ -537,8 +537,8 @@ void FlexSystem::postInitScene(){
 
 
 	g_flex = NvFlexCreateSolver(g_flexLib, maxParticles, g_maxDiffuseParticles, g_maxNeighborsPerParticle);
-	if (g_forcefieldCallback)
-		NvFlexExtDestroyForceFieldCallback(g_forcefieldCallback);
+	// if (g_forcefieldCallback)
+	// 	NvFlexExtDestroyForceFieldCallback(g_forcefieldCallback);
 	g_forcefieldCallback = NvFlexExtCreateForceFieldCallback(g_flex);
 }
 
