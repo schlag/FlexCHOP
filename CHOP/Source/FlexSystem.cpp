@@ -1029,42 +1029,47 @@ void FlexSystem::update(){
 
 		time2 = GetSeconds();
 
+		g_buffers->MapBuffers();
+
+		if (g_buffers->rigidOffsets.size()) {
+			for (int i = 0; i < g_buffers->rigidCoefficients.size(); ++i) {
+				g_buffers->rigidCoefficients[i] = g_stiffness;
+			}
+		}
 
 		g_buffers->UnmapBuffers();
 
-
-		if (g_buffers->activeIndices.size()) {
-			NvFlexSetActive(g_flex, g_buffers->activeIndices.buffer, g_buffers->activeIndices.size());
+		if (g_buffers->rigidOffsets.size()) {
+			NvFlexSetRigids(g_flex, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
 		}
-
-		if (g_buffers->positions.size()) {
-
-
-			NvFlexSetParticles(g_flex, g_buffers->positions.buffer, g_buffers->positions.size());
-			NvFlexSetVelocities(g_flex, g_buffers->velocities.buffer, g_buffers->velocities.size());
-			NvFlexSetPhases(g_flex, g_buffers->phases.buffer, g_buffers->phases.size());
-
-		}
+		NvFlexSetParticles(g_flex, g_buffers->positions.buffer, g_buffers->positions.size());
+		NvFlexSetVelocities(g_flex, g_buffers->velocities.buffer, g_buffers->velocities.size());
+		NvFlexSetPhases(g_flex, g_buffers->phases.buffer, g_buffers->phases.size());
+		NvFlexSetActive(g_flex, g_buffers->activeIndices.buffer, g_buffers->activeIndices.size());
+		NvFlexExtSetForceFields(g_forcefieldCallback, &g_forcefield, 1);
 
 		setShapes();
 
 		NvFlexSetParams(g_flex, &g_params);
-		NvFlexExtSetForceFields(g_forcefieldCallback, &g_forcefield, 1);
-
-		if (g_useParticleShape && g_stiffness > 0) {
-			NvFlexSetRigids(g_flex, g_buffers->rigidOffsets.buffer, g_buffers->rigidIndices.buffer, g_buffers->rigidLocalPositions.buffer, g_buffers->rigidLocalNormals.buffer, g_buffers->rigidCoefficients.buffer, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer, g_buffers->rigidOffsets.size() - 1, g_buffers->rigidIndices.size());
-		}
-
 		NvFlexUpdateSolver(g_flex, g_dt, g_numSubsteps, g_profile);
 
+		NvFlexGetParticles(g_flex, g_buffers->positions.buffer, g_buffers->positions.size());
+		NvFlexGetVelocities(g_flex, g_buffers->velocities.buffer, g_buffers->velocities.size());
+		NvFlexGetNormals(g_flex, g_buffers->normals.buffer, g_buffers->normals.size());
 
-		if(g_buffers->positions.size()){
-
-
-			NvFlexGetParticles(g_flex, g_buffers->positions.buffer, g_buffers->positions.size());
-			NvFlexGetVelocities(g_flex, g_buffers->velocities.buffer, g_buffers->velocities.size());
-
+		if (g_buffers->triangles.size()) {
+			NvFlexGetDynamicTriangles(g_flex, g_buffers->triangles.buffer, g_buffers->triangleNormals.buffer, g_buffers->triangles.size() / 3);
 		}
+
+		if (g_buffers->rigidOffsets.size()) {
+			NvFlexGetRigidTransforms(g_flex, g_buffers->rigidRotations.buffer, g_buffers->rigidTranslations.buffer);
+		}
+
+		NvFlexGetSmoothParticles(g_flex, g_buffers->smoothPositions.buffer, g_buffers->smoothPositions.size());
+		NvFlexGetAnisotropy(g_flex, g_buffers->anisotropy1.buffer, g_buffers->anisotropy2.buffer, g_buffers->anisotropy3.buffer);
+
+		NvFlexGetDensities(g_flex, g_buffers->densities.buffer, g_buffers->positions.size());
+		NvFlexGetDiffuseParticles(g_flex, g_buffers->diffusePositions.buffer, g_buffers->diffuseVelocities.buffer, g_buffers->diffuseIndices.buffer);
 
 		activeParticles = NvFlexGetActiveCount(g_flex);
 

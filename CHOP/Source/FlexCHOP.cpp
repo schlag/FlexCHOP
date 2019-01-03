@@ -429,13 +429,6 @@ FlexCHOP::execute(const CHOP_Output* output,
 
 	int simulate = inputs->getParInt("Simulate");
 
-	if (simulate == 1) {
-		if (FlexSys->g_useParticleShape && FlexSys->g_stiffness > 0) {
-			for (int i = 0; i < FlexSys->g_buffers->rigidCoefficients.size(); ++i)
-				FlexSys->g_buffers->rigidCoefficients[i] = FlexSys->g_stiffness;
-		}
-	}
-
 	if (reset == 1) {
 
 		FlexSys->postInitScene();
